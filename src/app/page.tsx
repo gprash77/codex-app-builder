@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Sparkles, Film, Clapperboard, Languages, Shuffle } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +28,7 @@ import {
   TIME_BUDGETS,
   getBridgePick,
   getTopPicks,
+  type RankedPick,
   type TimeBudget,
 } from "@/lib/recommendations";
 import { trackUiEvent } from "@/lib/analytics";
@@ -44,18 +45,75 @@ export default function Home() {
   const [mood, setMood] = useState<string>(MOODS[0]);
   const [budget, setBudget] = useState<TimeBudget>(BUDGET_KEYS[0]);
   const [hiddenGemMode, setHiddenGemMode] = useState<boolean>(true);
+  const [picks, setPicks] = useState<RankedPick[]>([]);
+  const [bridgePick, setBridgePick] = useState<RankedPick | null>(null);
+  const [source, setSource] = useState<"tmdb" | "mock">("mock");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const picks = useMemo(
-    () => getTopPicks({ genre, language, mood, budget, hiddenGemMode }),
+  const prefs = useMemo(
+    () => ({ genre, language, mood, budget, hiddenGemMode }),
     [genre, language, mood, budget, hiddenGemMode]
   );
 
-  const bridgePick = useMemo(() => {
-    if (picks.length === 0) {
-      return null;
+  useEffect(() => {
+    const fallbackPicks = getTopPicks(prefs);
+    const fallbackBridge = fallbackPicks.length > 0 ? getBridgePick(fallbackPicks[0], prefs) : null;
+
+    let cancelled = false;
+    const controller = new AbortController();
+
+    async function loadRecommendations() {
+      setIsLoading(true);
+
+      const query = new URLSearchParams({
+        genre: prefs.genre,
+        language: prefs.language,
+        mood: prefs.mood,
+        budget: prefs.budget,
+        hiddenGemMode: String(prefs.hiddenGemMode),
+      });
+
+      try {
+        const response = await fetch(`/api/recommendations?${query.toString()}`, {
+          signal: controller.signal,
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to load recommendations");
+        }
+
+        const data = (await response.json()) as {
+          source: "tmdb" | "mock";
+          picks: RankedPick[];
+          bridgePick: RankedPick | null;
+        };
+
+        if (!cancelled) {
+          setPicks(data.picks);
+          setBridgePick(data.bridgePick);
+          setSource(data.source);
+        }
+      } catch {
+        if (!cancelled) {
+          setPicks(fallbackPicks);
+          setBridgePick(fallbackBridge);
+          setSource("mock");
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
     }
-    return getBridgePick(picks[0], { genre, language, mood, budget, hiddenGemMode });
-  }, [picks, genre, language, mood, budget, hiddenGemMode]);
+
+    loadRecommendations();
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [prefs]);
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#183a4a_0%,_#09161f_45%,_#050a0f_100%)] text-zinc-100">
@@ -74,6 +132,10 @@ export default function Home() {
           <p className="mt-3 max-w-3xl text-sm text-zinc-300 sm:text-base">
             Choose mood, genre, language, and watch-time. The app gives three precise picks with a reason for each,
             plus a cross-language bridge recommendation.
+          </p>
+          <p className="mt-2 text-xs text-zinc-400">
+            Data source: {source === "tmdb" ? "TMDB live data" : "Local mock fallback"}
+            {isLoading ? " • refreshing..." : ""}
           </p>
 
           <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -168,7 +230,11 @@ export default function Home() {
                   <span className="text-xs text-zinc-300">Score {pick.score.toFixed(1)}</span>
                 </div>
                 <CardTitle className="flex items-center gap-2 text-xl">
-                  {pick.type === "Movie" ? <Film className="size-4 text-cyan-300" /> : <Clapperboard className="size-4 text-cyan-300" />}
+                  {pick.type === "Movie" ? (
+                    <Film className="size-4 text-cyan-300" />
+                  ) : (
+                    <Clapperboard className="size-4 text-cyan-300" />
+                  )}
                   {pick.title}
                 </CardTitle>
                 <CardDescription className="text-zinc-300">
@@ -219,7 +285,8 @@ export default function Home() {
                 <p className="text-sm text-zinc-200">{bridgePick.hook}</p>
                 <Separator className="bg-white/20" />
                 <p className="text-sm text-zinc-300">
-                  Taste DNA: {mood.toLowerCase()} tone + {genre.toLowerCase()} structure + {budget === "binge" ? "serial commitment" : "single-session payoff"}.
+                  Taste DNA: {mood.toLowerCase()} tone + {genre.toLowerCase()} structure +
+                  {budget === "binge" ? " serial commitment" : " single-session payoff"}.
                 </p>
               </CardContent>
             </Card>

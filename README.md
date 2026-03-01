@@ -24,6 +24,17 @@ npm run dev
 
 Then open [http://localhost:3000](http://localhost:3000).
 
+## Connect TMDB (free API)
+
+1. Create a free API key at [TMDB Settings > API](https://www.themoviedb.org/settings/api).
+2. Create `.env.local` in the project root:
+
+```bash
+TMDB_API_KEY=your_tmdb_api_key_here
+```
+
+Without this key, the app automatically falls back to local mock data.
+
 ## Quality checks
 
 ```bash

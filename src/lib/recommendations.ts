@@ -320,13 +320,18 @@ function diversify(sorted: RankedPick[]): RankedPick[] {
   return picks;
 }
 
-export function getTopPicks(prefs: TastePrefs): RankedPick[] {
-  const ranked = CATALOG.map((item) => scorePick(prefs, item)).sort((a, b) => b.score - a.score);
+export function getTopPicksFromCatalog(prefs: TastePrefs, catalog: CatalogTitle[]): RankedPick[] {
+  const ranked = catalog.map((item) => scorePick(prefs, item)).sort((a, b) => b.score - a.score);
   return diversify(ranked);
 }
 
-export function getBridgePick(primary: RankedPick, prefs: TastePrefs): RankedPick | null {
-  const bridge = CATALOG.filter((item) => item.id !== primary.id)
+export function getBridgePickFromCatalog(
+  primary: RankedPick,
+  prefs: TastePrefs,
+  catalog: CatalogTitle[]
+): RankedPick | null {
+  const bridge = catalog
+    .filter((item) => item.id !== primary.id)
     .map((item) => scorePick({ ...prefs, language: "Any" }, item))
     .filter(
       (item) =>
@@ -337,4 +342,16 @@ export function getBridgePick(primary: RankedPick, prefs: TastePrefs): RankedPic
     .sort((a, b) => b.score - a.score)[0];
 
   return bridge ?? null;
+}
+
+export function getTopPicks(prefs: TastePrefs): RankedPick[] {
+  return getTopPicksFromCatalog(prefs, CATALOG);
+}
+
+export function getBridgePick(primary: RankedPick, prefs: TastePrefs): RankedPick | null {
+  return getBridgePickFromCatalog(primary, prefs, CATALOG);
+}
+
+export function getMockCatalog(): CatalogTitle[] {
+  return CATALOG;
 }
