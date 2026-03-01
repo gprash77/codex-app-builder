@@ -1,4 +1,4 @@
-import type { CatalogTitle, TastePrefs } from "@/lib/recommendations";
+import type { CatalogTitle, MediaType, TastePrefs } from "@/lib/recommendations";
 
 type TmdbDiscoverResult = {
   id: number;
@@ -14,6 +14,17 @@ type TmdbDiscoverResult = {
 
 type TmdbDiscoverResponse = {
   results: TmdbDiscoverResult[];
+};
+
+type TmdbWatchProviderResponse = {
+  results?: Record<
+    string,
+    {
+      flatrate?: Array<{ provider_name: string }>;
+      rent?: Array<{ provider_name: string }>;
+      buy?: Array<{ provider_name: string }>;
+    }
+  >;
 };
 
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
@@ -210,6 +221,23 @@ async function tmdbFetch(path: string, params: Record<string, string>): Promise<
   return (await response.json()) as TmdbDiscoverResponse;
 }
 
+async function tmdbFetchByPath(path: string): Promise<unknown> {
+  const apiKey = process.env.TMDB_API_KEY;
+  if (!apiKey) {
+    throw new Error("TMDB_API_KEY is not set");
+  }
+
+  const response = await fetch(`${TMDB_BASE_URL}${path}${path.includes("?") ? "&" : "?"}api_key=${apiKey}`, {
+    next: { revalidate: 3600 },
+  });
+
+  if (!response.ok) {
+    throw new Error(`TMDB request failed: ${response.status}`);
+  }
+
+  return response.json();
+}
+
 function mapResultsToCatalog(
   results: TmdbDiscoverResult[],
   type: "Movie" | "Series",
@@ -261,4 +289,50 @@ export async function fetchTmdbCatalog(prefs: TastePrefs): Promise<CatalogTitle[
   const mappedSeries = mapResultsToCatalog(series.results, "Series", TV_ID_TO_GENRE, languageCode);
 
   return [...mappedMovies, ...mappedSeries];
+}
+
+function parseTmdbScopedId(id: string): { tmdbType: "movie" | "tv"; tmdbId: string } | null {
+  const match = id.match(/^(movie|series)-(\d+)$/);
+  if (!match) {
+    return null;
+  }
+
+  const tmdbType = match[1] === "movie" ? "movie" : "tv";
+  return { tmdbType, tmdbId: match[2] };
+}
+
+function dedupeProviderNames(names: string[]): string[] {
+  return Array.from(new Set(names)).slice(0, 4);
+}
+
+export async function fetchStreamingProvidersForTitles(
+  titles: Array<{ id: string; type: MediaType }>,
+  region = "US"
+): Promise<Record<string, string[]>> {
+  const results = await Promise.all(
+    titles.map(async (title) => {
+      const parsed = parseTmdbScopedId(title.id);
+      if (!parsed) {
+        return { id: title.id, providers: [] as string[] };
+      }
+
+      try {
+        const data = (await tmdbFetchByPath(
+          `/${parsed.tmdbType}/${parsed.tmdbId}/watch/providers`
+        )) as TmdbWatchProviderResponse;
+        const regionProviders = data.results?.[region];
+        const providers = dedupeProviderNames([
+          ...(regionProviders?.flatrate?.map((p) => p.provider_name) ?? []),
+          ...(regionProviders?.rent?.map((p) => `${p.provider_name} (Rent)`) ?? []),
+          ...(regionProviders?.buy?.map((p) => `${p.provider_name} (Buy)`) ?? []),
+        ]);
+
+        return { id: title.id, providers };
+      } catch {
+        return { id: title.id, providers: [] as string[] };
+      }
+    })
+  );
+
+  return Object.fromEntries(results.map((entry) => [entry.id, entry.providers]));
 }

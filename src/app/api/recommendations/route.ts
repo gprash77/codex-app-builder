@@ -8,7 +8,7 @@ import {
   type TastePrefs,
   type TimeBudget,
 } from "@/lib/recommendations";
-import { fetchTmdbCatalog } from "@/lib/tmdb";
+import { fetchStreamingProvidersForTitles, fetchTmdbCatalog } from "@/lib/tmdb";
 
 const VALID_BUDGETS = new Set<TimeBudget>(["quick", "feature", "binge"]);
 const VALID_MEDIA_TYPES = new Set<"All" | MediaType>(["All", "Movie", "Series"]);
@@ -61,13 +61,29 @@ export async function GET(request: NextRequest) {
 
     const bridgePick =
       picks.length > 0 ? getBridgePickFromCatalog(picks[0], workingPrefs, workingCatalog) : null;
+    const titlesToEnrich = bridgePick ? [...picks, bridgePick] : picks;
+    const providerMap = await fetchStreamingProvidersForTitles(
+      titlesToEnrich.map((title) => ({ id: title.id, type: title.type })),
+      "US"
+    );
+
+    const enrichedPicks = picks.map((pick) => ({
+      ...pick,
+      streamingProviders: providerMap[pick.id] ?? [],
+    }));
+    const enrichedBridgePick = bridgePick
+      ? { ...bridgePick, streamingProviders: providerMap[bridgePick.id] ?? [] }
+      : null;
+    const hasProviderData = [...enrichedPicks, ...(enrichedBridgePick ? [enrichedBridgePick] : [])].some(
+      (item) => (item.streamingProviders?.length ?? 0) > 0
+    );
 
     return NextResponse.json({
       source: "tmdb",
-      picks,
-      bridgePick,
+      picks: enrichedPicks,
+      bridgePick: enrichedBridgePick,
       notice,
-      providerCoverage: "none",
+      providerCoverage: hasProviderData ? "partial" : "none",
     });
   } catch {
     const catalog = getMockCatalog();

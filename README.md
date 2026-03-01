@@ -5,6 +5,7 @@ A quick movie and TV series recommendation engine built with Next.js, React, Tai
 ## What it does
 
 - Gives top 3 recommendations based on genre, language, mood, and time budget.
+- Shows streaming platform availability for many titles (TMDB watch providers, US region).
 - Supports a hidden-gem mode to reduce popularity bias.
 - Adds a cross-language bridge pick for discovery outside your usual language.
 - Explains each recommendation with concise "why this pick" reasons.

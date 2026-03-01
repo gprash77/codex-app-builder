@@ -118,7 +118,7 @@ export default function Home() {
   const [source, setSource] = useState<"tmdb" | "mock">("mock");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [availabilityNotice, setAvailabilityNotice] = useState<string | null>(null);
-  const [providerCoverage, setProviderCoverage] = useState<"none">("none");
+  const [providerCoverage, setProviderCoverage] = useState<"none" | "partial">("none");
   const [isListening, setIsListening] = useState<boolean>(false);
   const [mood, setMood] = useState<string>(DEFAULT_MOOD_BY_GENRE[GENRES[0]]);
   const [budget, setBudget] = useState<TimeBudget>("feature");
@@ -163,7 +163,7 @@ export default function Home() {
           picks: RankedPick[];
           bridgePick: RankedPick | null;
           notice?: string | null;
-          providerCoverage?: "none";
+          providerCoverage?: "none" | "partial";
         };
 
         if (!cancelled) {
@@ -288,9 +288,11 @@ export default function Home() {
             {source === "tmdb" ? "Live TMDB data" : "Local fallback data"}
             {isLoading ? " • refreshing..." : ""}
           </p>
-          {providerCoverage === "none" && (
-            <p className="mt-1 text-xs text-zinc-500">No streaming-platform availability yet.</p>
-          )}
+          <p className="mt-1 text-xs text-zinc-500">
+            {providerCoverage === "partial"
+              ? "Shows available platforms for many titles (US region)."
+              : "No streaming-platform availability data for current results."}
+          </p>
           {availabilityNotice && (
             <p className="mt-3 rounded-lg border border-amber-300/30 bg-amber-200/10 px-4 py-3 text-sm text-amber-100">
               {availabilityNotice}
@@ -401,6 +403,20 @@ export default function Home() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-base leading-relaxed text-zinc-200">{pick.hook}</p>
+                <div>
+                  <p className="mb-2 text-xs font-medium uppercase tracking-wide text-zinc-400">Where to watch</p>
+                  <div className="flex flex-wrap gap-2">
+                    {(pick.streamingProviders?.length ?? 0) > 0 ? (
+                      pick.streamingProviders?.map((provider) => (
+                        <Badge key={`${pick.id}-${provider}`} variant="outline" className="border-emerald-300/30 text-xs text-emerald-100">
+                          {provider}
+                        </Badge>
+                      ))
+                    ) : (
+                      <span className="text-sm text-zinc-400">Provider data unavailable for this title.</span>
+                    )}
+                  </div>
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {pick.genres.map((item) => (
                     <Badge key={item} variant="secondary" className="bg-white/10 px-2.5 py-1 text-sm text-zinc-100">
@@ -441,6 +457,20 @@ export default function Home() {
                   </Badge>
                 </div>
                 <p className="text-base text-zinc-200">{bridgePick.hook}</p>
+                <div>
+                  <p className="mb-2 text-xs font-medium uppercase tracking-wide text-zinc-400">Where to watch</p>
+                  <div className="flex flex-wrap gap-2">
+                    {(bridgePick.streamingProviders?.length ?? 0) > 0 ? (
+                      bridgePick.streamingProviders?.map((provider) => (
+                        <Badge key={`${bridgePick.id}-${provider}`} variant="outline" className="border-cyan-300/35 text-xs text-cyan-100">
+                          {provider}
+                        </Badge>
+                      ))
+                    ) : (
+                      <span className="text-sm text-zinc-400">Provider data unavailable for this title.</span>
+                    )}
+                  </div>
+                </div>
                 <Separator className="bg-white/20" />
                 <p className="text-base text-zinc-300">
                   Taste DNA: {mood.toLowerCase()} tone + {genre.toLowerCase()} structure.

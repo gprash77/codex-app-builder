@@ -27,6 +27,7 @@ export type CatalogTitle = {
 export type RankedPick = CatalogTitle & {
   score: number;
   reasons: string[];
+  streamingProviders?: string[];
 };
 
 export const GENRES = [
