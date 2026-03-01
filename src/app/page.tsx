@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Sparkles, Film, Clapperboard, Languages, Shuffle } from "lucide-react";
+import { Sparkles, Film, Clapperboard, Languages, Shuffle, Mic, Send } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,8 +24,6 @@ import { Separator } from "@/components/ui/separator";
 import {
   GENRES,
   LANGUAGES,
-  MOODS,
-  TIME_BUDGETS,
   getBridgePick,
   getTopPicks,
   type RankedPick,
@@ -33,22 +31,85 @@ import {
 } from "@/lib/recommendations";
 import { trackUiEvent } from "@/lib/analytics";
 
-const BUDGET_KEYS = Object.keys(TIME_BUDGETS) as TimeBudget[];
+type RecognitionCtor = new () => {
+  lang: string;
+  interimResults: boolean;
+  maxAlternatives: number;
+  onresult: ((event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+};
+
+const DEFAULT_MOOD_BY_GENRE: Record<string, string> = {
+  Thriller: "Intense",
+  "Sci-Fi": "Mind-Bending",
+  Drama: "Cerebral",
+  Comedy: "Comfort",
+  Crime: "Dark",
+  Fantasy: "Hopeful",
+  Romance: "Comfort",
+};
 
 function randomOf<T>(items: readonly T[]): T {
   return items[Math.floor(Math.random() * items.length)];
 }
 
+function inferMood(prompt: string, genre: string): string {
+  const text = prompt.toLowerCase();
+
+  if (text.includes("mind") || text.includes("twist")) return "Mind-Bending";
+  if (text.includes("comfort") || text.includes("feel good")) return "Comfort";
+  if (text.includes("dark") || text.includes("gritty")) return "Dark";
+  if (text.includes("hope") || text.includes("uplift")) return "Hopeful";
+  if (text.includes("intense") || text.includes("edge")) return "Intense";
+  if (text.includes("smart") || text.includes("cerebral")) return "Cerebral";
+
+  return DEFAULT_MOOD_BY_GENRE[genre] ?? "Cerebral";
+}
+
+function inferBudget(prompt: string): TimeBudget {
+  const text = prompt.toLowerCase();
+  if (text.includes("binge") || text.includes("series")) return "binge";
+  if (text.includes("quick") || text.includes("short") || text.includes("tonight")) return "quick";
+  return "feature";
+}
+
+function extractGenre(prompt: string, currentGenre: string): string {
+  const text = prompt.toLowerCase();
+  const sciFiAliases = ["sci-fi", "sci fi", "science fiction"];
+
+  for (const alias of sciFiAliases) {
+    if (text.includes(alias)) return "Sci-Fi";
+  }
+
+  for (const genre of GENRES) {
+    if (text.includes(genre.toLowerCase())) return genre;
+  }
+
+  return currentGenre;
+}
+
+function extractLanguage(prompt: string, currentLanguage: string): string {
+  const text = prompt.toLowerCase();
+  for (const language of LANGUAGES) {
+    if (language === "Any") continue;
+    if (text.includes(language.toLowerCase())) return language;
+  }
+  return currentLanguage;
+}
+
 export default function Home() {
   const [genre, setGenre] = useState<string>(GENRES[0]);
   const [language, setLanguage] = useState<string>(LANGUAGES[0]);
-  const [mood, setMood] = useState<string>(MOODS[0]);
-  const [budget, setBudget] = useState<TimeBudget>(BUDGET_KEYS[0]);
+  const [prompt, setPrompt] = useState<string>("");
   const [hiddenGemMode, setHiddenGemMode] = useState<boolean>(true);
   const [picks, setPicks] = useState<RankedPick[]>([]);
   const [bridgePick, setBridgePick] = useState<RankedPick | null>(null);
   const [source, setSource] = useState<"tmdb" | "mock">("mock");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isListening, setIsListening] = useState<boolean>(false);
+  const [mood, setMood] = useState<string>(DEFAULT_MOOD_BY_GENRE[GENRES[0]]);
+  const [budget, setBudget] = useState<TimeBudget>("feature");
 
   const prefs = useMemo(
     () => ({ genre, language, mood, budget, hiddenGemMode }),
@@ -115,6 +176,57 @@ export default function Home() {
     };
   }, [prefs]);
 
+  function applyPrompt(value: string) {
+    const nextGenre = extractGenre(value, genre);
+    const nextLanguage = extractLanguage(value, language);
+    const nextMood = inferMood(value, nextGenre);
+    const nextBudget = inferBudget(value);
+    const wantsHiddenGems = value.toLowerCase().includes("hidden gem") || value.toLowerCase().includes("underrated");
+
+    setGenre(nextGenre);
+    setLanguage(nextLanguage);
+    setMood(nextMood);
+    setBudget(nextBudget);
+    if (wantsHiddenGems) {
+      setHiddenGemMode(true);
+    }
+
+    trackUiEvent("prompt_submitted", {
+      prompt: value.slice(0, 80),
+      genre: nextGenre,
+      language: nextLanguage,
+    });
+  }
+
+  function startVoiceInput() {
+    const ctor = (window as unknown as { SpeechRecognition?: RecognitionCtor; webkitSpeechRecognition?: RecognitionCtor })
+      .SpeechRecognition
+      ??
+      (window as unknown as { SpeechRecognition?: RecognitionCtor; webkitSpeechRecognition?: RecognitionCtor })
+        .webkitSpeechRecognition;
+
+    if (!ctor) {
+      return;
+    }
+
+    const recognition = new ctor();
+    recognition.lang = "en-US";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0]?.[0]?.transcript ?? "";
+      setPrompt(transcript);
+      applyPrompt(transcript);
+    };
+
+    recognition.onend = () => setIsListening(false);
+
+    setIsListening(true);
+    trackUiEvent("voice_input_started", {});
+    recognition.start();
+  }
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#183a4a_0%,_#09161f_45%,_#050a0f_100%)] text-zinc-100">
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-5 py-8 sm:px-8 sm:py-12">
@@ -122,29 +234,53 @@ export default function Home() {
           <div className="flex flex-wrap items-center gap-3">
             <Badge className="bg-emerald-500/20 text-emerald-200">Taste Engine</Badge>
             <Badge variant="outline" className="border-cyan-300/30 bg-cyan-300/10 text-cyan-100">
-              Top 3, Not Top 300
+              Keep it simple: tell us what you want
             </Badge>
           </div>
 
           <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
-            Find your next movie or series across languages.
+            Describe your vibe and get 3 picks.
           </h1>
           <p className="mt-3 max-w-3xl text-sm text-zinc-300 sm:text-base">
-            Choose mood, genre, language, and watch-time. The app gives three precise picks with a reason for each,
-            plus a cross-language bridge recommendation.
+            Type or speak what you want. You can still fine-tune with just two filters: genre and language.
           </p>
           <p className="mt-2 text-xs text-zinc-400">
             Data source: {source === "tmdb" ? "TMDB live data" : "Local mock fallback"}
             {isLoading ? " • refreshing..." : ""}
           </p>
 
-          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <input
+              value={prompt}
+              onChange={(event) => setPrompt(event.target.value)}
+              placeholder="Try: A dark Korean thriller series or a feel-good Spanish comedy"
+              className="h-11 w-full rounded-md border border-white/20 bg-zinc-900/50 px-3 text-sm text-zinc-100 outline-none ring-0 placeholder:text-zinc-400 focus:border-cyan-300/70"
+            />
+            <Button
+              className="bg-zinc-100 text-zinc-900 hover:bg-zinc-200"
+              onClick={() => applyPrompt(prompt)}
+            >
+              <Send className="size-4" />
+              Search
+            </Button>
+            <Button
+              variant="outline"
+              className="border-zinc-300/30 bg-transparent text-zinc-100 hover:bg-zinc-100/10"
+              onClick={startVoiceInput}
+            >
+              <Mic className="size-4" />
+              {isListening ? "Listening..." : "Speak"}
+            </Button>
+          </div>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <FilterSelect
               label="Genre"
               value={genre}
               options={GENRES}
               onValueChange={(value) => {
                 setGenre(value);
+                setMood(DEFAULT_MOOD_BY_GENRE[value] ?? "Cerebral");
                 trackUiEvent("filter_genre_changed", { value });
               }}
             />
@@ -156,25 +292,6 @@ export default function Home() {
                 setLanguage(value);
                 trackUiEvent("filter_language_changed", { value });
               }}
-            />
-            <FilterSelect
-              label="Mood"
-              value={mood}
-              options={MOODS}
-              onValueChange={(value) => {
-                setMood(value);
-                trackUiEvent("filter_mood_changed", { value });
-              }}
-            />
-            <FilterSelect
-              label="Time"
-              value={budget}
-              options={BUDGET_KEYS}
-              onValueChange={(value) => {
-                setBudget(value as TimeBudget);
-                trackUiEvent("filter_budget_changed", { value });
-              }}
-              formatter={(value) => TIME_BUDGETS[value as TimeBudget]}
             />
             <div className="flex items-end gap-2">
               <Button
@@ -191,33 +308,28 @@ export default function Home() {
                 {hiddenGemMode ? "Hidden Gem: On" : "Hidden Gem: Off"}
               </Button>
             </div>
-          </div>
+            <div className="flex items-end">
+              <Button
+                variant="outline"
+                className="w-full border-zinc-300/30 bg-transparent text-zinc-100 hover:bg-zinc-100/10"
+                onClick={() => {
+                  const nextGenre = randomOf(GENRES);
+                  const nextLanguage = randomOf(LANGUAGES);
 
-          <div className="mt-3 flex justify-end">
-            <Button
-              variant="outline"
-              className="border-zinc-300/30 bg-transparent text-zinc-100 hover:bg-zinc-100/10"
-              onClick={() => {
-                const nextGenre = randomOf(GENRES);
-                const nextLanguage = randomOf(LANGUAGES);
-                const nextMood = randomOf(MOODS);
-                const nextBudget = randomOf(BUDGET_KEYS);
-
-                setGenre(nextGenre);
-                setLanguage(nextLanguage);
-                setMood(nextMood);
-                setBudget(nextBudget);
-                trackUiEvent("surprise_clicked", {
-                  genre: nextGenre,
-                  language: nextLanguage,
-                  mood: nextMood,
-                  budget: nextBudget,
-                });
-              }}
-            >
-              <Shuffle className="size-4" />
-              Surprise Me
-            </Button>
+                  setGenre(nextGenre);
+                  setLanguage(nextLanguage);
+                  setMood(DEFAULT_MOOD_BY_GENRE[nextGenre] ?? "Cerebral");
+                  setBudget(randomOf(["quick", "feature", "binge"] as const));
+                  trackUiEvent("surprise_clicked", {
+                    genre: nextGenre,
+                    language: nextLanguage,
+                  });
+                }}
+              >
+                <Shuffle className="size-4" />
+                Surprise Me
+              </Button>
+            </div>
           </div>
         </section>
 
@@ -285,8 +397,7 @@ export default function Home() {
                 <p className="text-sm text-zinc-200">{bridgePick.hook}</p>
                 <Separator className="bg-white/20" />
                 <p className="text-sm text-zinc-300">
-                  Taste DNA: {mood.toLowerCase()} tone + {genre.toLowerCase()} structure +
-                  {budget === "binge" ? " serial commitment" : " single-session payoff"}.
+                  Taste DNA: {mood.toLowerCase()} tone + {genre.toLowerCase()} structure.
                 </p>
               </CardContent>
             </Card>
@@ -302,10 +413,9 @@ type FilterSelectProps = {
   value: string;
   options: readonly string[];
   onValueChange: (value: string) => void;
-  formatter?: (value: string) => string;
 };
 
-function FilterSelect({ label, value, options, onValueChange, formatter }: FilterSelectProps) {
+function FilterSelect({ label, value, options, onValueChange }: FilterSelectProps) {
   return (
     <div className="grid gap-1.5">
       <label className="text-xs font-medium uppercase tracking-wide text-zinc-300">{label}</label>
@@ -313,10 +423,10 @@ function FilterSelect({ label, value, options, onValueChange, formatter }: Filte
         <SelectTrigger className="w-full border-white/20 bg-zinc-900/50 text-zinc-100">
           <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
         </SelectTrigger>
-        <SelectContent className="border-zinc-700 bg-zinc-900 text-zinc-100">
+        <SelectContent className="max-h-72 border-zinc-700 bg-zinc-900 text-zinc-100">
           {options.map((option) => (
             <SelectItem key={option} value={option}>
-              {formatter ? formatter(option) : option}
+              {option}
             </SelectItem>
           ))}
         </SelectContent>

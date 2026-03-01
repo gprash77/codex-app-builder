@@ -27,6 +27,19 @@ const LANGUAGE_TO_CODE: Record<string, string | null> = {
   Hindi: "hi",
   Tamil: "ta",
   French: "fr",
+  German: "de",
+  Italian: "it",
+  Portuguese: "pt",
+  Turkish: "tr",
+  Arabic: "ar",
+  Chinese: "zh",
+  Telugu: "te",
+  Malayalam: "ml",
+  Kannada: "kn",
+  Bengali: "bn",
+  Marathi: "mr",
+  Russian: "ru",
+  Thai: "th",
 };
 
 const LANGUAGE_NAME_BY_CODE: Record<string, string> = {
@@ -37,6 +50,19 @@ const LANGUAGE_NAME_BY_CODE: Record<string, string> = {
   hi: "Hindi",
   ta: "Tamil",
   fr: "French",
+  de: "German",
+  it: "Italian",
+  pt: "Portuguese",
+  tr: "Turkish",
+  ar: "Arabic",
+  zh: "Chinese",
+  te: "Telugu",
+  ml: "Malayalam",
+  kn: "Kannada",
+  bn: "Bengali",
+  mr: "Marathi",
+  ru: "Russian",
+  th: "Thai",
 };
 
 const LANGUAGE_ORIGIN_BY_CODE: Record<string, string> = {
@@ -47,6 +73,19 @@ const LANGUAGE_ORIGIN_BY_CODE: Record<string, string> = {
   hi: "India",
   ta: "India",
   fr: "France",
+  de: "Germany",
+  it: "Italy",
+  pt: "Portugal",
+  tr: "Turkey",
+  ar: "Middle East",
+  zh: "China",
+  te: "India",
+  ml: "India",
+  kn: "India",
+  bn: "India",
+  mr: "India",
+  ru: "Russia",
+  th: "Thailand",
 };
 
 const MOVIE_GENRE_TO_ID: Record<string, number | null> = {

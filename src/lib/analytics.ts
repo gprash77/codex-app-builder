@@ -1,10 +1,10 @@
 export type UiEventName =
   | "filter_genre_changed"
   | "filter_language_changed"
-  | "filter_mood_changed"
-  | "filter_budget_changed"
   | "hidden_gem_toggled"
-  | "surprise_clicked";
+  | "surprise_clicked"
+  | "prompt_submitted"
+  | "voice_input_started";
 
 export function trackUiEvent(name: UiEventName, payload: Record<string, string | boolean>) {
   if (typeof window === "undefined") {

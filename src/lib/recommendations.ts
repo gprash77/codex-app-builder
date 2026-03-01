@@ -47,6 +47,19 @@ export const LANGUAGES = [
   "Hindi",
   "Tamil",
   "French",
+  "German",
+  "Italian",
+  "Portuguese",
+  "Turkish",
+  "Arabic",
+  "Chinese",
+  "Telugu",
+  "Malayalam",
+  "Kannada",
+  "Bengali",
+  "Marathi",
+  "Russian",
+  "Thai",
 ] as const;
 
 export const MOODS = [
