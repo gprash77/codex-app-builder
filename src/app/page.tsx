@@ -115,6 +115,8 @@ export default function Home() {
   const [bridgePick, setBridgePick] = useState<RankedPick | null>(null);
   const [source, setSource] = useState<"tmdb" | "mock">("mock");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [availabilityNotice, setAvailabilityNotice] = useState<string | null>(null);
+  const [providerCoverage, setProviderCoverage] = useState<"none">("none");
   const [isListening, setIsListening] = useState<boolean>(false);
   const [mood, setMood] = useState<string>(DEFAULT_MOOD_BY_GENRE[GENRES[0]]);
   const [budget, setBudget] = useState<TimeBudget>("feature");
@@ -158,18 +160,24 @@ export default function Home() {
           source: "tmdb" | "mock";
           picks: RankedPick[];
           bridgePick: RankedPick | null;
+          notice?: string | null;
+          providerCoverage?: "none";
         };
 
         if (!cancelled) {
           setPicks(data.picks);
           setBridgePick(data.bridgePick);
           setSource(data.source);
+          setAvailabilityNotice(data.notice ?? null);
+          setProviderCoverage(data.providerCoverage ?? "none");
         }
       } catch {
         if (!cancelled) {
           setPicks(fallbackPicks);
           setBridgePick(fallbackBridge);
           setSource("mock");
+          setAvailabilityNotice("Unable to load live data right now. Showing local fallback picks.");
+          setProviderCoverage("none");
         }
       } finally {
         if (!cancelled) {
@@ -261,6 +269,16 @@ export default function Home() {
             Data source: {source === "tmdb" ? "TMDB live data" : "Local mock fallback"}
             {isLoading ? " • refreshing..." : ""}
           </p>
+          {availabilityNotice && (
+            <p className="mt-2 rounded-md border border-amber-300/30 bg-amber-200/10 px-3 py-2 text-xs text-amber-100">
+              {availabilityNotice}
+            </p>
+          )}
+          {providerCoverage === "none" && (
+            <p className="mt-2 text-xs text-zinc-400">
+              Streaming platform availability (Netflix, Prime Video, etc.) is not included yet.
+            </p>
+          )}
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <input

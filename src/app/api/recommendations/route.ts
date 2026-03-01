@@ -41,14 +41,33 @@ export async function GET(request: NextRequest) {
   const prefs = parsePrefs(request);
 
   try {
-    const catalog = await fetchTmdbCatalog(prefs);
-    const picks = getTopPicksFromCatalog(prefs, catalog);
-    const bridgePick = picks.length > 0 ? getBridgePickFromCatalog(picks[0], prefs, catalog) : null;
+    let workingPrefs = prefs;
+    let workingCatalog = await fetchTmdbCatalog(workingPrefs);
+    let picks = getTopPicksFromCatalog(workingPrefs, workingCatalog);
+    let notice: string | null = null;
+
+    if (picks.length === 0 && prefs.language !== "Any") {
+      const relaxedPrefs = { ...prefs, language: "Any" as const };
+      const relaxedCatalog = await fetchTmdbCatalog(relaxedPrefs);
+      const relaxedPicks = getTopPicksFromCatalog(relaxedPrefs, relaxedCatalog);
+
+      if (relaxedPicks.length > 0) {
+        workingPrefs = relaxedPrefs;
+        workingCatalog = relaxedCatalog;
+        picks = relaxedPicks;
+        notice = `No exact ${prefs.language} results found for this filter. Showing closest matches across available languages.`;
+      }
+    }
+
+    const bridgePick =
+      picks.length > 0 ? getBridgePickFromCatalog(picks[0], workingPrefs, workingCatalog) : null;
 
     return NextResponse.json({
       source: "tmdb",
       picks,
       bridgePick,
+      notice,
+      providerCoverage: "none",
     });
   } catch {
     const catalog = getMockCatalog();
@@ -59,6 +78,8 @@ export async function GET(request: NextRequest) {
       source: "mock",
       picks,
       bridgePick,
+      notice: "Live data is limited for this filter right now. Showing curated fallback picks.",
+      providerCoverage: "none",
     });
   }
 }
