@@ -182,11 +182,28 @@ function makeHook(overview: string): string {
     return "Distinctive tone and strong audience reception make this worth trying.";
   }
 
-  if (cleaned.length <= 140) {
+  if (cleaned.length <= 220) {
     return cleaned;
   }
 
-  return `${cleaned.slice(0, 137)}...`;
+  const sentenceMatch = cleaned.match(/^(.{80,220}?[.!?])(\s|$)/);
+  if (sentenceMatch?.[1]) {
+    return sentenceMatch[1].trim();
+  }
+
+  const softCut = cleaned.slice(0, 210);
+  const lastBreak = Math.max(
+    softCut.lastIndexOf(". "),
+    softCut.lastIndexOf("! "),
+    softCut.lastIndexOf("? "),
+    softCut.lastIndexOf(", ")
+  );
+
+  if (lastBreak > 120) {
+    return `${softCut.slice(0, lastBreak + 1).trim()}...`;
+  }
+
+  return `${softCut.trim()}...`;
 }
 
 function toGemScore(popularity: number, voteAverage: number, voteCount: number): number {
