@@ -252,33 +252,12 @@ export default function Home() {
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#1a5a42_0%,_#0b1d27_38%,_#060b11_100%)] text-zinc-100">
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-10 px-5 py-8 sm:px-8 sm:py-12">
         <section className="rounded-3xl border border-emerald-200/20 bg-zinc-950/35 p-6 shadow-2xl backdrop-blur-md sm:p-9">
-          <div className="flex flex-wrap items-center gap-3">
-            <Badge className="bg-emerald-400/20 px-3 py-1 text-sm text-emerald-100">What to Watch</Badge>
-            <Badge variant="outline" className="border-cyan-300/40 bg-cyan-300/10 px-3 py-1 text-sm text-cyan-100">
-              Quick movie/series recommendation engine
-            </Badge>
-          </div>
-
-          <h1 className="mt-5 text-4xl leading-tight font-semibold tracking-tight sm:text-5xl">
-            Tell us what you want. Get 3 picks fast.
+          <h1 className="text-5xl leading-tight font-semibold tracking-tight sm:text-6xl">
+            What to Watch
           </h1>
-          <p className="mt-4 max-w-4xl text-base leading-relaxed text-zinc-200 sm:text-lg">
-            Type or speak your request. Then refine with simple filters for type, genre, and language.
+          <p className="mt-3 max-w-3xl text-base text-zinc-200 sm:text-lg">
+            Ask for a movie or series in any language.
           </p>
-          <p className="mt-3 text-sm text-zinc-300">
-            Data source: {source === "tmdb" ? "TMDB live data" : "Local mock fallback"}
-            {isLoading ? " • refreshing..." : ""}
-          </p>
-          {availabilityNotice && (
-            <p className="mt-3 rounded-lg border border-amber-300/30 bg-amber-200/10 px-4 py-3 text-sm text-amber-100">
-              {availabilityNotice}
-            </p>
-          )}
-          {providerCoverage === "none" && (
-            <p className="mt-3 text-sm text-zinc-300">
-              Streaming platform availability (Netflix, Prime Video, etc.) is not included yet.
-            </p>
-          )}
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <input
@@ -303,6 +282,18 @@ export default function Home() {
               {isListening ? "Listening..." : "Speak"}
             </Button>
           </div>
+          <p className="mt-3 text-xs text-zinc-400">
+            {source === "tmdb" ? "Live TMDB data" : "Local fallback data"}
+            {isLoading ? " • refreshing..." : ""}
+          </p>
+          {providerCoverage === "none" && (
+            <p className="mt-1 text-xs text-zinc-500">No streaming-platform availability yet.</p>
+          )}
+          {availabilityNotice && (
+            <p className="mt-3 rounded-lg border border-amber-300/30 bg-amber-200/10 px-4 py-3 text-sm text-amber-100">
+              {availabilityNotice}
+            </p>
+          )}
 
           <div className="mt-5 flex flex-wrap items-center gap-2">
             <span className="text-sm font-medium uppercase tracking-wide text-zinc-200">Type</span>
