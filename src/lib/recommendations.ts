@@ -30,7 +30,9 @@ export type RankedPick = CatalogTitle & {
 };
 
 export const GENRES = [
+  "Action",
   "Thriller",
+  "Mystery",
   "Sci-Fi",
   "Drama",
   "Comedy",
@@ -80,6 +82,18 @@ export const TIME_BUDGETS: Record<TimeBudget, string> = {
 
 const CATALOG: CatalogTitle[] = [
   {
+    id: "rrr",
+    title: "RRR",
+    type: "Movie",
+    origin: "India",
+    languages: ["Telugu"],
+    genres: ["Action", "Drama"],
+    moods: ["Intense", "Hopeful"],
+    runtimeMinutes: 179,
+    gemScore: 7,
+    hook: "A maximalist action epic with emotional momentum and spectacular set pieces.",
+  },
+  {
     id: "burning",
     title: "Burning",
     type: "Movie",
@@ -126,6 +140,18 @@ const CATALOG: CatalogTitle[] = [
     runtimeMinutes: 75,
     gemScore: 9,
     hook: "Quiet but devastating storytelling about empathy and survival.",
+  },
+  {
+    id: "broadchurch",
+    title: "Broadchurch",
+    type: "Series",
+    origin: "United Kingdom",
+    languages: ["English"],
+    genres: ["Mystery", "Crime", "Drama"],
+    moods: ["Dark", "Cerebral"],
+    runtimeMinutes: 48,
+    gemScore: 8,
+    hook: "A coastal murder mystery driven by grief, secrets, and layered character work.",
   },
   {
     id: "andhadhun",

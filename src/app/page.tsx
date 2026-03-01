@@ -42,7 +42,9 @@ type RecognitionCtor = new () => {
 };
 
 const DEFAULT_MOOD_BY_GENRE: Record<string, string> = {
+  Action: "Intense",
   Thriller: "Intense",
+  Mystery: "Cerebral",
   "Sci-Fi": "Mind-Bending",
   Drama: "Cerebral",
   Comedy: "Comfort",

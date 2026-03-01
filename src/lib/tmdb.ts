@@ -89,7 +89,9 @@ const LANGUAGE_ORIGIN_BY_CODE: Record<string, string> = {
 };
 
 const MOVIE_GENRE_TO_ID: Record<string, number | null> = {
+  Action: 28,
   Thriller: 53,
+  Mystery: 9648,
   "Sci-Fi": 878,
   Drama: 18,
   Comedy: 35,
@@ -99,7 +101,9 @@ const MOVIE_GENRE_TO_ID: Record<string, number | null> = {
 };
 
 const TV_GENRE_TO_ID: Record<string, number | null> = {
+  Action: 10759,
   Thriller: 9648,
+  Mystery: 9648,
   "Sci-Fi": 10765,
   Drama: 18,
   Comedy: 35,
@@ -109,7 +113,9 @@ const TV_GENRE_TO_ID: Record<string, number | null> = {
 };
 
 const MOVIE_ID_TO_GENRE: Record<number, string> = {
+  28: "Action",
   53: "Thriller",
+  9648: "Mystery",
   878: "Sci-Fi",
   18: "Drama",
   35: "Comedy",
@@ -119,7 +125,8 @@ const MOVIE_ID_TO_GENRE: Record<number, string> = {
 };
 
 const TV_ID_TO_GENRE: Record<number, string> = {
-  9648: "Thriller",
+  10759: "Action",
+  9648: "Mystery",
   10765: "Fantasy",
   18: "Drama",
   35: "Comedy",
