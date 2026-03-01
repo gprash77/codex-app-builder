@@ -119,6 +119,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [availabilityNotice, setAvailabilityNotice] = useState<string | null>(null);
   const [providerCoverage, setProviderCoverage] = useState<"none" | "partial">("none");
+  const [providersOnly, setProvidersOnly] = useState<boolean>(false);
   const [isListening, setIsListening] = useState<boolean>(false);
   const [mood, setMood] = useState<string>(DEFAULT_MOOD_BY_GENRE[GENRES[0]]);
   const [budget, setBudget] = useState<TimeBudget>("feature");
@@ -195,6 +196,17 @@ export default function Home() {
       controller.abort();
     };
   }, [prefs]);
+
+  const visiblePicks = useMemo(
+    () => (providersOnly ? picks.filter((pick) => (pick.streamingProviders?.length ?? 0) > 0) : picks),
+    [picks, providersOnly]
+  );
+
+  const visibleBridgePick = useMemo(() => {
+    if (!bridgePick) return null;
+    if (!providersOnly) return bridgePick;
+    return (bridgePick.streamingProviders?.length ?? 0) > 0 ? bridgePick : null;
+  }, [bridgePick, providersOnly]);
 
   function applyPrompt(value: string) {
     const nextGenre = extractGenre(value, genre);
@@ -318,6 +330,23 @@ export default function Home() {
                 {option === "All" ? "All" : option === "Movie" ? "Movies" : "Series"}
               </Button>
             ))}
+            <Button
+              variant={providersOnly ? "default" : "outline"}
+              className={
+                providersOnly
+                  ? "h-10 bg-emerald-200 px-4 text-sm text-emerald-950 hover:bg-emerald-100"
+                  : "h-10 border-zinc-300/30 bg-transparent px-4 text-sm text-zinc-100 hover:bg-zinc-100/10"
+              }
+              onClick={() => {
+                setProvidersOnly((state) => {
+                  const next = !state;
+                  trackUiEvent("filter_providers_only_toggled", { enabled: next });
+                  return next;
+                });
+              }}
+            >
+              Providers only
+            </Button>
           </div>
 
           <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -382,7 +411,7 @@ export default function Home() {
         </section>
 
         <section className="grid gap-5 lg:grid-cols-3">
-          {picks.map((pick, idx) => (
+          {visiblePicks.map((pick, idx) => (
             <Card key={pick.id} className="rounded-2xl border-emerald-200/20 bg-zinc-950/45 text-zinc-100 shadow-xl">
               <CardHeader className="gap-3">
                 <div className="flex items-center justify-between">
@@ -435,9 +464,18 @@ export default function Home() {
               </CardFooter>
             </Card>
           ))}
+          {providersOnly && visiblePicks.length === 0 && (
+            <Card className="rounded-2xl border-emerald-200/20 bg-zinc-950/45 text-zinc-100 shadow-xl lg:col-span-3">
+              <CardContent className="py-10">
+                <p className="text-center text-base text-zinc-300">
+                  No titles with provider data for this filter. Try another language, genre, or disable Providers only.
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </section>
 
-        {bridgePick && (
+        {visibleBridgePick && (
           <section>
             <Card className="rounded-2xl border-cyan-300/30 bg-cyan-100/8 text-zinc-100">
               <CardHeader>
@@ -451,18 +489,18 @@ export default function Home() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-2xl font-semibold">{bridgePick.title}</p>
+                  <p className="text-2xl font-semibold">{visibleBridgePick.title}</p>
                   <Badge variant="outline" className="border-white/20 px-2.5 py-1 text-sm text-zinc-200">
-                    {bridgePick.languages[0]}
+                    {visibleBridgePick.languages[0]}
                   </Badge>
                 </div>
-                <p className="text-base text-zinc-200">{bridgePick.hook}</p>
+                <p className="text-base text-zinc-200">{visibleBridgePick.hook}</p>
                 <div>
                   <p className="mb-2 text-xs font-medium uppercase tracking-wide text-zinc-400">Where to watch</p>
                   <div className="flex flex-wrap gap-2">
-                    {(bridgePick.streamingProviders?.length ?? 0) > 0 ? (
-                      bridgePick.streamingProviders?.map((provider) => (
-                        <Badge key={`${bridgePick.id}-${provider}`} variant="outline" className="border-cyan-300/35 text-xs text-cyan-100">
+                    {(visibleBridgePick.streamingProviders?.length ?? 0) > 0 ? (
+                      visibleBridgePick.streamingProviders?.map((provider) => (
+                        <Badge key={`${visibleBridgePick.id}-${provider}`} variant="outline" className="border-cyan-300/35 text-xs text-cyan-100">
                           {provider}
                         </Badge>
                       ))
