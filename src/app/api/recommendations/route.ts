@@ -4,22 +4,28 @@ import {
   getBridgePickFromCatalog,
   getMockCatalog,
   getTopPicksFromCatalog,
+  type MediaType,
   type TastePrefs,
   type TimeBudget,
 } from "@/lib/recommendations";
 import { fetchTmdbCatalog } from "@/lib/tmdb";
 
 const VALID_BUDGETS = new Set<TimeBudget>(["quick", "feature", "binge"]);
+const VALID_MEDIA_TYPES = new Set<"All" | MediaType>(["All", "Movie", "Series"]);
 
 function parsePrefs(request: NextRequest): TastePrefs {
   const { searchParams } = new URL(request.url);
 
   const budgetParam = searchParams.get("budget") ?? "quick";
   const hiddenGemParam = searchParams.get("hiddenGemMode") ?? "true";
+  const mediaTypeParam = searchParams.get("mediaType") ?? "All";
 
   const budget = VALID_BUDGETS.has(budgetParam as TimeBudget)
     ? (budgetParam as TimeBudget)
     : "quick";
+  const mediaType = VALID_MEDIA_TYPES.has(mediaTypeParam as "All" | MediaType)
+    ? (mediaTypeParam as "All" | MediaType)
+    : "All";
 
   return {
     genre: searchParams.get("genre") ?? "Thriller",
@@ -27,6 +33,7 @@ function parsePrefs(request: NextRequest): TastePrefs {
     mood: searchParams.get("mood") ?? "Mind-Bending",
     budget,
     hiddenGemMode: hiddenGemParam === "true",
+    mediaType,
   };
 }
 

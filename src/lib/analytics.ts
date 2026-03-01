@@ -1,6 +1,7 @@
 export type UiEventName =
   | "filter_genre_changed"
   | "filter_language_changed"
+  | "filter_media_type_changed"
   | "hidden_gem_toggled"
   | "surprise_clicked"
   | "prompt_submitted"

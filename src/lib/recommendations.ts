@@ -8,6 +8,7 @@ export type TastePrefs = {
   mood: string;
   budget: TimeBudget;
   hiddenGemMode: boolean;
+  mediaType: "All" | MediaType;
 };
 
 export type CatalogTitle = {
@@ -334,7 +335,9 @@ function diversify(sorted: RankedPick[]): RankedPick[] {
 }
 
 export function getTopPicksFromCatalog(prefs: TastePrefs, catalog: CatalogTitle[]): RankedPick[] {
-  const ranked = catalog.map((item) => scorePick(prefs, item)).sort((a, b) => b.score - a.score);
+  const filtered =
+    prefs.mediaType === "All" ? catalog : catalog.filter((item) => item.type === prefs.mediaType);
+  const ranked = filtered.map((item) => scorePick(prefs, item)).sort((a, b) => b.score - a.score);
   return diversify(ranked);
 }
 

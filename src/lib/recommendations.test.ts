@@ -10,6 +10,7 @@ describe("recommendations engine", () => {
       mood: "Mind-Bending",
       budget: "quick",
       hiddenGemMode: true,
+      mediaType: "All",
     });
 
     expect(picks).toHaveLength(3);
@@ -22,6 +23,7 @@ describe("recommendations engine", () => {
       mood: "Comfort",
       budget: "binge",
       hiddenGemMode: true,
+      mediaType: "All",
     });
 
     expect(picks.some((pick) => pick.languages.includes("Japanese"))).toBe(true);
@@ -34,6 +36,7 @@ describe("recommendations engine", () => {
       mood: "Cerebral",
       budget: "feature",
       hiddenGemMode: true,
+      mediaType: "All",
     });
 
     const hiddenGemOff = getTopPicks({
@@ -42,6 +45,7 @@ describe("recommendations engine", () => {
       mood: "Cerebral",
       budget: "feature",
       hiddenGemMode: false,
+      mediaType: "All",
     });
 
     expect(hiddenGemOn[0]?.id).not.toBe(hiddenGemOff[0]?.id);
@@ -54,6 +58,7 @@ describe("recommendations engine", () => {
       mood: "Intense",
       budget: "feature" as const,
       hiddenGemMode: true,
+      mediaType: "All" as const,
     };
 
     const picks = getTopPicks(prefs);
@@ -63,5 +68,18 @@ describe("recommendations engine", () => {
     if (bridge) {
       expect(bridge.languages[0]).not.toBe(picks[0].languages[0]);
     }
+  });
+
+  it("respects media type filtering for movies", () => {
+    const picks = getTopPicks({
+      genre: "Thriller",
+      language: "Any",
+      mood: "Intense",
+      budget: "feature",
+      hiddenGemMode: true,
+      mediaType: "Movie",
+    });
+
+    expect(picks.every((pick) => pick.type === "Movie")).toBe(true);
   });
 });

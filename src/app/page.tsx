@@ -26,6 +26,7 @@ import {
   LANGUAGES,
   getBridgePick,
   getTopPicks,
+  type MediaType,
   type RankedPick,
   type TimeBudget,
 } from "@/lib/recommendations";
@@ -98,6 +99,13 @@ function extractLanguage(prompt: string, currentLanguage: string): string {
   return currentLanguage;
 }
 
+function extractMediaType(prompt: string, current: "All" | MediaType): "All" | MediaType {
+  const text = prompt.toLowerCase();
+  if (text.includes("movie") || text.includes("film")) return "Movie";
+  if (text.includes("series") || text.includes("show") || text.includes("tv")) return "Series";
+  return current;
+}
+
 export default function Home() {
   const [genre, setGenre] = useState<string>(GENRES[0]);
   const [language, setLanguage] = useState<string>(LANGUAGES[0]);
@@ -110,10 +118,11 @@ export default function Home() {
   const [isListening, setIsListening] = useState<boolean>(false);
   const [mood, setMood] = useState<string>(DEFAULT_MOOD_BY_GENRE[GENRES[0]]);
   const [budget, setBudget] = useState<TimeBudget>("feature");
+  const [mediaType, setMediaType] = useState<"All" | MediaType>("All");
 
   const prefs = useMemo(
-    () => ({ genre, language, mood, budget, hiddenGemMode }),
-    [genre, language, mood, budget, hiddenGemMode]
+    () => ({ genre, language, mood, budget, hiddenGemMode, mediaType }),
+    [genre, language, mood, budget, hiddenGemMode, mediaType]
   );
 
   useEffect(() => {
@@ -132,6 +141,7 @@ export default function Home() {
         mood: prefs.mood,
         budget: prefs.budget,
         hiddenGemMode: String(prefs.hiddenGemMode),
+        mediaType: prefs.mediaType,
       });
 
       try {
@@ -181,12 +191,14 @@ export default function Home() {
     const nextLanguage = extractLanguage(value, language);
     const nextMood = inferMood(value, nextGenre);
     const nextBudget = inferBudget(value);
+    const nextMediaType = extractMediaType(value, mediaType);
     const wantsHiddenGems = value.toLowerCase().includes("hidden gem") || value.toLowerCase().includes("underrated");
 
     setGenre(nextGenre);
     setLanguage(nextLanguage);
     setMood(nextMood);
     setBudget(nextBudget);
+    setMediaType(nextMediaType);
     if (wantsHiddenGems) {
       setHiddenGemMode(true);
     }
@@ -195,6 +207,7 @@ export default function Home() {
       prompt: value.slice(0, 80),
       genre: nextGenre,
       language: nextLanguage,
+      mediaType: nextMediaType,
     });
   }
 
@@ -273,6 +286,27 @@ export default function Home() {
             </Button>
           </div>
 
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span className="text-xs font-medium uppercase tracking-wide text-zinc-300">Type</span>
+            {(["All", "Movie", "Series"] as const).map((option) => (
+              <Button
+                key={option}
+                variant={mediaType === option ? "default" : "outline"}
+                className={
+                  mediaType === option
+                    ? "bg-zinc-100 text-zinc-900 hover:bg-zinc-200"
+                    : "border-zinc-300/30 bg-transparent text-zinc-100 hover:bg-zinc-100/10"
+                }
+                onClick={() => {
+                  setMediaType(option);
+                  trackUiEvent("filter_media_type_changed", { value: option });
+                }}
+              >
+                {option === "All" ? "All" : option === "Movie" ? "Movies" : "Series"}
+              </Button>
+            ))}
+          </div>
+
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <FilterSelect
               label="Genre"
@@ -320,6 +354,7 @@ export default function Home() {
                   setLanguage(nextLanguage);
                   setMood(DEFAULT_MOOD_BY_GENRE[nextGenre] ?? "Cerebral");
                   setBudget(randomOf(["quick", "feature", "binge"] as const));
+                  setMediaType(randomOf(["All", "Movie", "Series"] as const));
                   trackUiEvent("surprise_clicked", {
                     genre: nextGenre,
                     language: nextLanguage,
