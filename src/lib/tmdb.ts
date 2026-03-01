@@ -271,17 +271,20 @@ export async function fetchTmdbCatalog(prefs: TastePrefs): Promise<CatalogTitle[
   const languageCode = LANGUAGE_TO_CODE[prefs.language] ?? null;
   const movieGenre = MOVIE_GENRE_TO_ID[prefs.genre] ?? null;
   const tvGenre = TV_GENRE_TO_ID[prefs.genre] ?? null;
+  const today = new Date().toISOString().slice(0, 10);
 
   const [movies, series] = await Promise.all([
     tmdbFetch("/discover/movie", {
       with_genres: movieGenre ? String(movieGenre) : "",
       with_original_language: languageCode ?? "",
       "vote_count.gte": "40",
+      "primary_release_date.lte": today,
     }),
     tmdbFetch("/discover/tv", {
       with_genres: tvGenre ? String(tvGenre) : "",
       with_original_language: languageCode ?? "",
       "vote_count.gte": "20",
+      "first_air_date.lte": today,
     }),
   ]);
 
