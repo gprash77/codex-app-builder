@@ -30,6 +30,7 @@ import {
   getTopPicks,
   type TimeBudget,
 } from "@/lib/recommendations";
+import { trackUiEvent } from "@/lib/analytics";
 
 const BUDGET_KEYS = Object.keys(TIME_BUDGETS) as TimeBudget[];
 
@@ -80,31 +81,49 @@ export default function Home() {
               label="Genre"
               value={genre}
               options={GENRES}
-              onValueChange={setGenre}
+              onValueChange={(value) => {
+                setGenre(value);
+                trackUiEvent("filter_genre_changed", { value });
+              }}
             />
             <FilterSelect
               label="Language"
               value={language}
               options={LANGUAGES}
-              onValueChange={setLanguage}
+              onValueChange={(value) => {
+                setLanguage(value);
+                trackUiEvent("filter_language_changed", { value });
+              }}
             />
             <FilterSelect
               label="Mood"
               value={mood}
               options={MOODS}
-              onValueChange={setMood}
+              onValueChange={(value) => {
+                setMood(value);
+                trackUiEvent("filter_mood_changed", { value });
+              }}
             />
             <FilterSelect
               label="Time"
               value={budget}
               options={BUDGET_KEYS}
-              onValueChange={(value) => setBudget(value as TimeBudget)}
+              onValueChange={(value) => {
+                setBudget(value as TimeBudget);
+                trackUiEvent("filter_budget_changed", { value });
+              }}
               formatter={(value) => TIME_BUDGETS[value as TimeBudget]}
             />
             <div className="flex items-end gap-2">
               <Button
                 className="w-full bg-zinc-100 text-zinc-900 hover:bg-zinc-200"
-                onClick={() => setHiddenGemMode((state) => !state)}
+                onClick={() =>
+                  setHiddenGemMode((state) => {
+                    const next = !state;
+                    trackUiEvent("hidden_gem_toggled", { enabled: next });
+                    return next;
+                  })
+                }
               >
                 <Sparkles className="size-4" />
                 {hiddenGemMode ? "Hidden Gem: On" : "Hidden Gem: Off"}
@@ -117,10 +136,21 @@ export default function Home() {
               variant="outline"
               className="border-zinc-300/30 bg-transparent text-zinc-100 hover:bg-zinc-100/10"
               onClick={() => {
-                setGenre(randomOf(GENRES));
-                setLanguage(randomOf(LANGUAGES));
-                setMood(randomOf(MOODS));
-                setBudget(randomOf(BUDGET_KEYS));
+                const nextGenre = randomOf(GENRES);
+                const nextLanguage = randomOf(LANGUAGES);
+                const nextMood = randomOf(MOODS);
+                const nextBudget = randomOf(BUDGET_KEYS);
+
+                setGenre(nextGenre);
+                setLanguage(nextLanguage);
+                setMood(nextMood);
+                setBudget(nextBudget);
+                trackUiEvent("surprise_clicked", {
+                  genre: nextGenre,
+                  language: nextLanguage,
+                  mood: nextMood,
+                  budget: nextBudget,
+                });
               }}
             >
               <Shuffle className="size-4" />

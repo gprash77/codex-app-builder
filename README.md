@@ -28,5 +28,11 @@ Then open [http://localhost:3000](http://localhost:3000).
 
 ```bash
 npm run lint
+npm run test
 npm run build
 ```
+
+## Dev event tracking
+
+UI interactions are tracked locally during development (filters, hidden-gem toggle, surprise action).
+Events are stored in browser localStorage under `tastebridge.events`.
