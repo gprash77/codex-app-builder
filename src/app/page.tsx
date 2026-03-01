@@ -253,17 +253,17 @@ export default function Home() {
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-5 py-8 sm:px-8 sm:py-12">
         <section className="rounded-2xl border border-white/15 bg-white/5 p-6 backdrop-blur-sm sm:p-8">
           <div className="flex flex-wrap items-center gap-3">
-            <Badge className="bg-emerald-500/20 text-emerald-200">Taste Engine</Badge>
+            <Badge className="bg-emerald-500/20 text-emerald-200">What to Watch</Badge>
             <Badge variant="outline" className="border-cyan-300/30 bg-cyan-300/10 text-cyan-100">
-              Keep it simple: tell us what you want
+              Quick movie/series recommendation engine
             </Badge>
           </div>
 
           <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
-            Describe your vibe and get 3 picks.
+            Tell us what you want. Get 3 picks fast.
           </h1>
           <p className="mt-3 max-w-3xl text-sm text-zinc-300 sm:text-base">
-            Type or speak what you want. You can still fine-tune with just two filters: genre and language.
+            Type or speak your request. Then refine with simple filters for type, genre, and language.
           </p>
           <p className="mt-2 text-xs text-zinc-400">
             Data source: {source === "tmdb" ? "TMDB live data" : "Local mock fallback"}
@@ -284,7 +284,7 @@ export default function Home() {
             <input
               value={prompt}
               onChange={(event) => setPrompt(event.target.value)}
-              placeholder="Try: A dark Korean thriller series or a feel-good Spanish comedy"
+              placeholder="Try: Recommend a Korean thriller series, or a feel-good Spanish movie"
               className="h-11 w-full rounded-md border border-white/20 bg-zinc-900/50 px-3 text-sm text-zinc-100 outline-none ring-0 placeholder:text-zinc-400 focus:border-cyan-300/70"
             />
             <Button

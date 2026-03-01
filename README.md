@@ -1,6 +1,6 @@
-# TasteBridge
+# What to Watch
 
-A multilingual movie and TV recommendation app built with Next.js, React, Tailwind CSS v4, and shadcn/ui.
+A quick movie and TV series recommendation engine built with Next.js, React, Tailwind CSS v4, and shadcn/ui.
 
 ## What it does
 
@@ -46,4 +46,4 @@ npm run build
 ## Dev event tracking
 
 UI interactions are tracked locally during development (filters, hidden-gem toggle, surprise action).
-Events are stored in browser localStorage under `tastebridge.events`.
+Events are stored in browser localStorage under `what-to-watch.events`.

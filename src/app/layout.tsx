@@ -13,9 +13,9 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "TasteBridge | Cross-Language Movie Picks",
+  title: "What to Watch | Quick Movie & Series Recommendations",
   description:
-    "Discover top movie and series recommendations across languages by mood, genre, and watch time.",
+    "Quick movie and TV series recommendations by genre, language, and vibe across multiple languages.",
 };
 
 export default function RootLayout({
