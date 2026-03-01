@@ -249,33 +249,33 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#183a4a_0%,_#09161f_45%,_#050a0f_100%)] text-zinc-100">
-      <main className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-5 py-8 sm:px-8 sm:py-12">
-        <section className="rounded-2xl border border-white/15 bg-white/5 p-6 backdrop-blur-sm sm:p-8">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#1a5a42_0%,_#0b1d27_38%,_#060b11_100%)] text-zinc-100">
+      <main className="mx-auto flex w-full max-w-7xl flex-col gap-10 px-5 py-8 sm:px-8 sm:py-12">
+        <section className="rounded-3xl border border-emerald-200/20 bg-zinc-950/35 p-6 shadow-2xl backdrop-blur-md sm:p-9">
           <div className="flex flex-wrap items-center gap-3">
-            <Badge className="bg-emerald-500/20 text-emerald-200">What to Watch</Badge>
-            <Badge variant="outline" className="border-cyan-300/30 bg-cyan-300/10 text-cyan-100">
+            <Badge className="bg-emerald-400/20 px-3 py-1 text-sm text-emerald-100">What to Watch</Badge>
+            <Badge variant="outline" className="border-cyan-300/40 bg-cyan-300/10 px-3 py-1 text-sm text-cyan-100">
               Quick movie/series recommendation engine
             </Badge>
           </div>
 
-          <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
+          <h1 className="mt-5 text-4xl leading-tight font-semibold tracking-tight sm:text-5xl">
             Tell us what you want. Get 3 picks fast.
           </h1>
-          <p className="mt-3 max-w-3xl text-sm text-zinc-300 sm:text-base">
+          <p className="mt-4 max-w-4xl text-base leading-relaxed text-zinc-200 sm:text-lg">
             Type or speak your request. Then refine with simple filters for type, genre, and language.
           </p>
-          <p className="mt-2 text-xs text-zinc-400">
+          <p className="mt-3 text-sm text-zinc-300">
             Data source: {source === "tmdb" ? "TMDB live data" : "Local mock fallback"}
             {isLoading ? " • refreshing..." : ""}
           </p>
           {availabilityNotice && (
-            <p className="mt-2 rounded-md border border-amber-300/30 bg-amber-200/10 px-3 py-2 text-xs text-amber-100">
+            <p className="mt-3 rounded-lg border border-amber-300/30 bg-amber-200/10 px-4 py-3 text-sm text-amber-100">
               {availabilityNotice}
             </p>
           )}
           {providerCoverage === "none" && (
-            <p className="mt-2 text-xs text-zinc-400">
+            <p className="mt-3 text-sm text-zinc-300">
               Streaming platform availability (Netflix, Prime Video, etc.) is not included yet.
             </p>
           )}
@@ -285,10 +285,10 @@ export default function Home() {
               value={prompt}
               onChange={(event) => setPrompt(event.target.value)}
               placeholder="Try: Recommend a Korean thriller series, or a feel-good Spanish movie"
-              className="h-11 w-full rounded-md border border-white/20 bg-zinc-900/50 px-3 text-sm text-zinc-100 outline-none ring-0 placeholder:text-zinc-400 focus:border-cyan-300/70"
+              className="h-14 w-full rounded-xl border border-emerald-200/25 bg-zinc-900/70 px-4 text-base text-zinc-100 outline-none ring-0 placeholder:text-zinc-400 focus:border-emerald-300/70"
             />
             <Button
-              className="bg-zinc-100 text-zinc-900 hover:bg-zinc-200"
+              className="h-14 bg-emerald-200 px-6 text-base text-emerald-950 hover:bg-emerald-100"
               onClick={() => applyPrompt(prompt)}
             >
               <Send className="size-4" />
@@ -296,7 +296,7 @@ export default function Home() {
             </Button>
             <Button
               variant="outline"
-              className="border-zinc-300/30 bg-transparent text-zinc-100 hover:bg-zinc-100/10"
+              className="h-14 border-zinc-300/40 bg-transparent px-6 text-base text-zinc-100 hover:bg-zinc-100/10"
               onClick={startVoiceInput}
             >
               <Mic className="size-4" />
@@ -304,16 +304,16 @@ export default function Home() {
             </Button>
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <span className="text-xs font-medium uppercase tracking-wide text-zinc-300">Type</span>
+          <div className="mt-5 flex flex-wrap items-center gap-2">
+            <span className="text-sm font-medium uppercase tracking-wide text-zinc-200">Type</span>
             {(["All", "Movie", "Series"] as const).map((option) => (
               <Button
                 key={option}
                 variant={mediaType === option ? "default" : "outline"}
                 className={
                   mediaType === option
-                    ? "bg-zinc-100 text-zinc-900 hover:bg-zinc-200"
-                    : "border-zinc-300/30 bg-transparent text-zinc-100 hover:bg-zinc-100/10"
+                    ? "h-10 bg-emerald-200 px-4 text-sm text-emerald-950 hover:bg-emerald-100"
+                    : "h-10 border-zinc-300/30 bg-transparent px-4 text-sm text-zinc-100 hover:bg-zinc-100/10"
                 }
                 onClick={() => {
                   setMediaType(option);
@@ -325,7 +325,7 @@ export default function Home() {
             ))}
           </div>
 
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <FilterSelect
               label="Genre"
               value={genre}
@@ -347,7 +347,7 @@ export default function Home() {
             />
             <div className="flex items-end gap-2">
               <Button
-                className="w-full bg-zinc-100 text-zinc-900 hover:bg-zinc-200"
+                className="h-11 w-full bg-zinc-100 text-sm text-zinc-900 hover:bg-zinc-200"
                 onClick={() =>
                   setHiddenGemMode((state) => {
                     const next = !state;
@@ -363,7 +363,7 @@ export default function Home() {
             <div className="flex items-end">
               <Button
                 variant="outline"
-                className="w-full border-zinc-300/30 bg-transparent text-zinc-100 hover:bg-zinc-100/10"
+                className="h-11 w-full border-zinc-300/30 bg-transparent text-sm text-zinc-100 hover:bg-zinc-100/10"
                 onClick={() => {
                   const nextGenre = randomOf(GENRES);
                   const nextLanguage = randomOf(LANGUAGES);
@@ -386,15 +386,15 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="grid gap-4 lg:grid-cols-3">
+        <section className="grid gap-5 lg:grid-cols-3">
           {picks.map((pick, idx) => (
-            <Card key={pick.id} className="border-white/10 bg-white/5 text-zinc-100 shadow-xl">
+            <Card key={pick.id} className="rounded-2xl border-emerald-200/20 bg-zinc-950/45 text-zinc-100 shadow-xl">
               <CardHeader className="gap-3">
                 <div className="flex items-center justify-between">
-                  <Badge className="bg-amber-400/20 text-amber-100">#{idx + 1} Pick</Badge>
-                  <span className="text-xs text-zinc-300">Score {pick.score.toFixed(1)}</span>
+                  <Badge className="bg-amber-400/20 px-2.5 py-1 text-sm text-amber-100">#{idx + 1} Pick</Badge>
+                  <span className="text-sm text-zinc-300">Score {pick.score.toFixed(1)}</span>
                 </div>
-                <CardTitle className="flex items-center gap-2 text-xl">
+                <CardTitle className="flex items-center gap-2 text-2xl">
                   {pick.type === "Movie" ? (
                     <Film className="size-4 text-cyan-300" />
                   ) : (
@@ -402,24 +402,24 @@ export default function Home() {
                   )}
                   {pick.title}
                 </CardTitle>
-                <CardDescription className="text-zinc-300">
+                <CardDescription className="text-base text-zinc-300">
                   {pick.type} • {pick.origin} • {pick.runtimeMinutes} min
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-sm text-zinc-200">{pick.hook}</p>
+                <p className="text-base leading-relaxed text-zinc-200">{pick.hook}</p>
                 <div className="flex flex-wrap gap-2">
                   {pick.genres.map((item) => (
-                    <Badge key={item} variant="secondary" className="bg-white/10 text-zinc-100">
+                    <Badge key={item} variant="secondary" className="bg-white/10 px-2.5 py-1 text-sm text-zinc-100">
                       {item}
                     </Badge>
                   ))}
                 </div>
               </CardContent>
               <CardFooter className="flex-col items-start gap-2">
-                <p className="text-xs font-medium uppercase tracking-wider text-zinc-400">Why this pick</p>
+                <p className="text-sm font-medium uppercase tracking-wider text-zinc-400">Why this pick</p>
                 {pick.reasons.slice(0, 3).map((reason) => (
-                  <p key={reason} className="text-sm text-zinc-200">
+                  <p key={reason} className="text-base text-zinc-200">
                     • {reason}
                   </p>
                 ))}
@@ -430,26 +430,26 @@ export default function Home() {
 
         {bridgePick && (
           <section>
-            <Card className="border-cyan-300/25 bg-cyan-100/5 text-zinc-100">
+            <Card className="rounded-2xl border-cyan-300/30 bg-cyan-100/8 text-zinc-100">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
+                <CardTitle className="flex items-center gap-2 text-2xl">
                   <Languages className="size-4 text-cyan-300" />
                   Cross-language bridge pick
                 </CardTitle>
-                <CardDescription className="text-zinc-300">
+                <CardDescription className="text-base text-zinc-300">
                   If you like your #1 choice, jump to this in another language with a similar vibe.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-xl font-semibold">{bridgePick.title}</p>
-                  <Badge variant="outline" className="border-white/20 text-zinc-200">
+                  <p className="text-2xl font-semibold">{bridgePick.title}</p>
+                  <Badge variant="outline" className="border-white/20 px-2.5 py-1 text-sm text-zinc-200">
                     {bridgePick.languages[0]}
                   </Badge>
                 </div>
-                <p className="text-sm text-zinc-200">{bridgePick.hook}</p>
+                <p className="text-base text-zinc-200">{bridgePick.hook}</p>
                 <Separator className="bg-white/20" />
-                <p className="text-sm text-zinc-300">
+                <p className="text-base text-zinc-300">
                   Taste DNA: {mood.toLowerCase()} tone + {genre.toLowerCase()} structure.
                 </p>
               </CardContent>
@@ -470,13 +470,13 @@ type FilterSelectProps = {
 
 function FilterSelect({ label, value, options, onValueChange }: FilterSelectProps) {
   return (
-    <div className="grid gap-1.5">
-      <label className="text-xs font-medium uppercase tracking-wide text-zinc-300">{label}</label>
+    <div className="grid gap-2">
+      <label className="text-sm font-medium uppercase tracking-wide text-zinc-200">{label}</label>
       <Select value={value} onValueChange={onValueChange}>
-        <SelectTrigger className="w-full border-white/20 bg-zinc-900/50 text-zinc-100">
+        <SelectTrigger className="h-11 w-full border-white/25 bg-zinc-900/60 text-base text-zinc-100">
           <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
         </SelectTrigger>
-        <SelectContent className="max-h-72 border-zinc-700 bg-zinc-900 text-zinc-100">
+        <SelectContent className="max-h-72 border-zinc-700 bg-zinc-900 text-base text-zinc-100">
           {options.map((option) => (
             <SelectItem key={option} value={option}>
               {option}
