@@ -135,6 +135,7 @@ export default function Home() {
   const [expandedTrailerId, setExpandedTrailerId] = useState<string | null>(null);
   const [scrollToResultsPending, setScrollToResultsPending] = useState<boolean>(false);
   const topPicksRef = useRef<HTMLElement | null>(null);
+  const searchPanelRef = useRef<HTMLElement | null>(null);
 
   const prefs = useMemo(
     () => ({ genre, language, mood, budget, hiddenGemMode, mediaType }),
@@ -306,7 +307,10 @@ export default function Home() {
       </header>
 
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-5 py-8 sm:px-8 sm:py-14">
-        <section className="rounded-3xl border border-white/12 bg-[radial-gradient(circle_at_0%_0%,rgba(255,255,255,0.10),transparent_40%),linear-gradient(150deg,#141821_0%,#0b0e15_48%,#07090f_100%)] p-6 shadow-[0_40px_110px_-55px_rgba(0,0,0,0.9)] sm:p-10">
+        <section
+          ref={searchPanelRef}
+          className="rounded-3xl border border-white/12 bg-[radial-gradient(circle_at_0%_0%,rgba(255,255,255,0.10),transparent_40%),linear-gradient(150deg,#141821_0%,#0b0e15_48%,#07090f_100%)] p-6 shadow-[0_40px_110px_-55px_rgba(0,0,0,0.9)] sm:p-10"
+        >
           <div className="max-w-3xl space-y-4">
             <p className="text-xs font-medium uppercase tracking-[0.18em] text-zinc-400">Personalized picks</p>
             <h1 className="text-4xl leading-tight font-semibold tracking-tight text-zinc-100 sm:text-6xl">
@@ -463,7 +467,7 @@ export default function Home() {
           {visiblePicks.map((pick, idx) => (
             <Card
               key={pick.id}
-              className="group rounded-2xl border-zinc-200/90 bg-white/92 shadow-[0_26px_56px_-40px_rgba(15,23,42,0.5)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_34px_70px_-38px_rgba(15,23,42,0.55)]"
+              className="group flex h-full min-h-[36rem] flex-col rounded-2xl border-zinc-200/90 bg-white/92 shadow-[0_26px_56px_-40px_rgba(15,23,42,0.5)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_34px_70px_-38px_rgba(15,23,42,0.55)]"
             >
               <CardHeader className="gap-3">
                 <div className="flex items-center justify-between">
@@ -482,10 +486,10 @@ export default function Home() {
                   {pick.type} • {pick.origin} • {pick.runtimeMinutes} min
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="flex-1 space-y-4">
                 <p className="text-[15px] leading-relaxed text-zinc-700">{pick.hook}</p>
-                {pick.trailer?.youtubeKey && (
-                  <div className="space-y-2">
+                <div className="space-y-2">
+                  {pick.trailer?.youtubeKey ? (
                     <div className="flex items-center gap-2">
                       <Button
                         type="button"
@@ -507,23 +511,25 @@ export default function Home() {
                         Open on YouTube
                       </a>
                     </div>
-                    {expandedTrailerId === pick.id && (
-                      <div className="overflow-hidden rounded-xl border border-zinc-200 bg-zinc-950">
-                        <iframe
-                          title={`${pick.title} trailer`}
-                          src={`https://www.youtube-nocookie.com/embed/${pick.trailer.youtubeKey}`}
-                          className="aspect-video w-full"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                          referrerPolicy="strict-origin-when-cross-origin"
-                          allowFullScreen
-                        />
-                      </div>
-                    )}
-                  </div>
-                )}
+                  ) : (
+                    <p className="h-9 text-xs leading-9 text-zinc-400">Trailer unavailable</p>
+                  )}
+                  {pick.trailer?.youtubeKey && expandedTrailerId === pick.id && (
+                    <div className="overflow-hidden rounded-xl border border-zinc-200 bg-zinc-950">
+                      <iframe
+                        title={`${pick.title} trailer`}
+                        src={`https://www.youtube-nocookie.com/embed/${pick.trailer.youtubeKey}`}
+                        className="aspect-video w-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        referrerPolicy="strict-origin-when-cross-origin"
+                        allowFullScreen
+                      />
+                    </div>
+                  )}
+                </div>
                 <div>
                   <p className="mb-2 text-xs font-medium uppercase tracking-wide text-zinc-500">Where to watch</p>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex min-h-12 flex-wrap gap-2">
                     {(pick.streamingProviders?.length ?? 0) > 0 ? (
                       pick.streamingProviders?.map((provider) => (
                         <Badge
@@ -567,6 +573,16 @@ export default function Home() {
             </Card>
           )}
         </section>
+        <div className="flex justify-center">
+          <Button
+            type="button"
+            variant="outline"
+            className="rounded-full border-zinc-300 bg-white px-5 text-sm text-zinc-700 hover:bg-zinc-100"
+            onClick={() => searchPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+          >
+            Go back up
+          </Button>
+        </div>
 
         {visibleBridgePick && (
           <section>
