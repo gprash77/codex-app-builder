@@ -8,7 +8,11 @@ import {
   type TastePrefs,
   type TimeBudget,
 } from "@/lib/recommendations";
-import { fetchStreamingProvidersForTitles, fetchTmdbCatalog } from "@/lib/tmdb";
+import {
+  fetchStreamingProvidersForTitles,
+  fetchTmdbCatalog,
+  fetchTrailersForTitles,
+} from "@/lib/tmdb";
 
 const VALID_BUDGETS = new Set<TimeBudget>(["quick", "feature", "binge"]);
 const VALID_MEDIA_TYPES = new Set<"All" | MediaType>(["All", "Movie", "Series"]);
@@ -62,14 +66,17 @@ export async function GET(request: NextRequest) {
     const bridgePick =
       picks.length > 0 ? getBridgePickFromCatalog(picks[0], workingPrefs, workingCatalog) : null;
     const titlesToEnrich = bridgePick ? [...picks, bridgePick] : picks;
-    const providerMap = await fetchStreamingProvidersForTitles(
-      titlesToEnrich.map((title) => ({ id: title.id, type: title.type })),
-      "US"
-    );
+    const enrichmentTargets = titlesToEnrich.map((title) => ({ id: title.id, type: title.type }));
+    const trailerTargets = picks.slice(0, 3).map((title) => ({ id: title.id, type: title.type }));
+    const [providerMap, trailerMap] = await Promise.all([
+      fetchStreamingProvidersForTitles(enrichmentTargets, "US"),
+      fetchTrailersForTitles(trailerTargets),
+    ]);
 
     const enrichedPicks = picks.map((pick) => ({
       ...pick,
       streamingProviders: providerMap[pick.id] ?? [],
+      trailer: trailerMap[pick.id] ?? null,
     }));
     const enrichedBridgePick = bridgePick
       ? { ...bridgePick, streamingProviders: providerMap[bridgePick.id] ?? [] }

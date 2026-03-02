@@ -27,6 +27,19 @@ type TmdbWatchProviderResponse = {
   >;
 };
 
+type TmdbVideoResult = {
+  site: string;
+  key: string;
+  name: string;
+  type: string;
+  official: boolean;
+  published_at?: string;
+};
+
+type TmdbVideosResponse = {
+  results?: TmdbVideoResult[];
+};
+
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 
 const LANGUAGE_TO_CODE: Record<string, string | null> = {
@@ -325,6 +338,35 @@ function dedupeProviderNames(names: string[]): string[] {
   return Array.from(new Set(names)).slice(0, 4);
 }
 
+function pickBestTrailer(videos: TmdbVideoResult[]): TmdbVideoResult | null {
+  const youtubeVideos = videos.filter((video) => video.site === "YouTube" && Boolean(video.key));
+  if (youtubeVideos.length === 0) {
+    return null;
+  }
+
+  const typeRank: Record<string, number> = {
+    Trailer: 3,
+    Teaser: 2,
+    Clip: 1,
+  };
+
+  const scored = youtubeVideos
+    .map((video) => ({
+      video,
+      score: (video.official ? 10 : 0) + (typeRank[video.type] ?? 0),
+    }))
+    .sort((a, b) => {
+      if (b.score !== a.score) {
+        return b.score - a.score;
+      }
+      const aDate = a.video.published_at ? Date.parse(a.video.published_at) : 0;
+      const bDate = b.video.published_at ? Date.parse(b.video.published_at) : 0;
+      return bDate - aDate;
+    });
+
+  return scored[0]?.video ?? null;
+}
+
 export async function fetchStreamingProvidersForTitles(
   titles: Array<{ id: string; type: MediaType }>,
   region = "US"
@@ -355,4 +397,37 @@ export async function fetchStreamingProvidersForTitles(
   );
 
   return Object.fromEntries(results.map((entry) => [entry.id, entry.providers]));
+}
+
+export async function fetchTrailersForTitles(
+  titles: Array<{ id: string; type: MediaType }>
+): Promise<Record<string, { name: string; youtubeKey: string } | null>> {
+  const results = await Promise.all(
+    titles.map(async (title) => {
+      const parsed = parseTmdbScopedId(title.id);
+      if (!parsed) {
+        return { id: title.id, trailer: null };
+      }
+
+      try {
+        const data = (await tmdbFetchByPath(`/${parsed.tmdbType}/${parsed.tmdbId}/videos`)) as TmdbVideosResponse;
+        const bestTrailer = pickBestTrailer(data.results ?? []);
+        if (!bestTrailer) {
+          return { id: title.id, trailer: null };
+        }
+
+        return {
+          id: title.id,
+          trailer: {
+            name: bestTrailer.name,
+            youtubeKey: bestTrailer.key,
+          },
+        };
+      } catch {
+        return { id: title.id, trailer: null };
+      }
+    })
+  );
+
+  return Object.fromEntries(results.map((entry) => [entry.id, entry.trailer]));
 }

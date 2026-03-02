@@ -28,6 +28,10 @@ export type RankedPick = CatalogTitle & {
   score: number;
   reasons: string[];
   streamingProviders?: string[];
+  trailer?: {
+    name: string;
+    youtubeKey: string;
+  } | null;
 };
 
 export const GENRES = [

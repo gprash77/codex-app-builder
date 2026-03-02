@@ -50,20 +50,20 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --background: oklch(0.985 0.004 100);
+  --foreground: oklch(0.225 0.01 85);
+  --card: oklch(0.998 0.002 100);
+  --card-foreground: oklch(0.225 0.01 85);
+  --popover: oklch(0.998 0.002 100);
+  --popover-foreground: oklch(0.225 0.01 85);
+  --primary: oklch(0.25 0.01 85);
+  --primary-foreground: oklch(0.99 0.003 100);
+  --secondary: oklch(0.965 0.005 95);
+  --secondary-foreground: oklch(0.27 0.008 85);
+  --muted: oklch(0.965 0.005 95);
+  --muted-foreground: oklch(0.53 0.012 85);
+  --accent: oklch(0.955 0.01 95);
+  --accent-foreground: oklch(0.24 0.012 85);
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
@@ -124,11 +124,18 @@
   body {
     @apply bg-background text-foreground;
     letter-spacing: 0.005em;
+    background-image: radial-gradient(circle at 10% 0%, rgb(228 231 228 / 35%) 0%, transparent 45%);
+    text-rendering: geometricPrecision;
+  }
+
+  ::selection {
+    background: rgb(31 41 55 / 16%);
   }
 
   h1,
   h2,
   h3 {
-    font-family: var(--font-fraunces), Georgia, serif;
+    font-family: var(--font-space-grotesk), "Inter", "Segoe UI", sans-serif;
+    letter-spacing: -0.02em;
   }
 }
