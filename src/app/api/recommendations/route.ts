@@ -92,7 +92,8 @@ export async function GET(request: NextRequest) {
       notice,
       providerCoverage: hasProviderData ? "partial" : "none",
     });
-  } catch {
+  } catch (e) {
+    console.error("[recommendations] TMDB fetch failed, falling back to mock data:", e);
     const catalog = getMockCatalog();
     const picks = getTopPicksFromCatalog(prefs, catalog);
     const bridgePick = picks.length > 0 ? getBridgePickFromCatalog(picks[0], prefs, catalog) : null;
